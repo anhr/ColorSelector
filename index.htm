@@ -1,0 +1,77 @@
+﻿<!--<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.2//EN" "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd">-->
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Color Selector</title>
+	<meta name="author" content="Andrej Hristoliubov anhr@mail.ru">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	
+	<!--
+		Get all scripts from current site.
+		You can edit all scripts,
+		but my updates in the gitgub https://github.com/anhr/InputKeyFilter and https://github.com/anhr/ColorSelector projects is not available.
+	 -->
+	<link rel="stylesheet" href="ColorSelector.css" type="text/css">		
+	<script type="text/javascript" src="Common.js"></script>
+	<script type="text/javascript" src="ColorSelector.js"></script>
+ 
+	<!--
+		Get all scripts from my projects in gitgub https://github.com/anhr/InputKeyFilter and https://github.com/anhr/ColorSelector.
+		You can use all my updates immediately if you getting all scripts from  my projects in gitgub,
+		but you can not edit scripts, except if you do a contribute in my github projects.
+		
+		See details in http://stackoverflow.com/questions/17341122/link-and-execute-external-javascript-file-hosted-on-github
+	 -->
+	<!--
+	<link rel="stylesheet" href="https://rawgit.com/anhr/ColorSelector/master/ColorSelector.css" type="text/css">		
+	<script type="text/javascript" src="https://rawgit.com/anhr/ColorSelector/master/Common.js"></script>
+	<script type="text/javascript" src="https://rawgit.com/anhr/ColorSelector/master/ColorSelector.js"></script>
+	 -->
+	
+</head>
+<body>
+	<h1>Сross browser compatible Color Selector</h1>
+	You can use my Color Selector instead of &lt;input type="color"&gt; if you want open your web page in an old web browser, that does not supports HTML5,
+	for example IE6.
+	<p>
+	Your browser does not supports HTML5 if you do not see the HTML5 color selector here: <input type="color">
+	Instead you see a text input field.
+	</p>
+	<hr>
+	My Color Selectors:
+	<p>
+		<input id="colorSelector1">
+		<script>
+			colorSelector.Create("#000000", function(selectedColor){
+					consoleLog("selectedColor = " + selectedColor);
+					var elementSelectedColor = document.getElementById("SelectedColor1")
+					//elementSelectedColor.innerText = selectedColor;//Uncompatible with FireFox
+					elementSelectedColor.innerHTML = selectedColor;
+					elementSelectedColor.style.background = selectedColor;
+					elementSelectedColor.style.color = invertHex(colourNameToHex(selectedColor));
+				}
+				, "colorSelector1"
+			);
+		</script>
+		Selected color: <span id="SelectedColor1"></span>
+	</p>
+	<p>
+		<input id="colorSelector2">
+		<script>
+			colorSelector.Create("white", function(selectedColor){
+					consoleLog("selectedColor = " + selectedColor);
+					var elementSelectedColor = document.getElementById("SelectedColor2")
+					//elementSelectedColor.innerText = selectedColor;//Uncompatible with FireFox
+					elementSelectedColor.innerHTML = selectedColor;
+					elementSelectedColor.style.background = selectedColor;
+					elementSelectedColor.style.color = invertHex(colourNameToHex(selectedColor));
+				}
+				, "colorSelector2"
+			);
+		</script>
+		Selected color: <span id="SelectedColor2"></span>
+	</p>
+	<hr>
+	Have a job for me? Please read <a href='../AboutMe/' target="_blank">About Me</a>.
+</body>
+</html>
