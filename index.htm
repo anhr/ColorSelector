@@ -42,7 +42,7 @@
 	<p>
 		<input id="colorSelector1">
 		<script>
-			colorSelector.Create("#000000", function(selectedColor){
+			colorSelector.Create("black", function(selectedColor){
 					consoleLog("selectedColor = " + selectedColor);
 					var elementSelectedColor = document.getElementById("SelectedColor1")
 					//elementSelectedColor.innerText = selectedColor;//Uncompatible with FireFox
@@ -58,7 +58,7 @@
 	<p>
 		<input id="colorSelector2">
 		<script>
-			colorSelector.Create("white", function(selectedColor){
+			colorSelector.Create("#ffffff", function(selectedColor){
 					consoleLog("selectedColor = " + selectedColor);
 					var elementSelectedColor = document.getElementById("SelectedColor2")
 					//elementSelectedColor.innerText = selectedColor;//Uncompatible with FireFox

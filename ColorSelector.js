@@ -6,11 +6,15 @@
 	}
 	
 	, Create: function(color, selectedColor, elementColorID){
-		colorSelector.AddElementColorSelector(color, function(e){
-	//consoleLog("ColorSelector.onmousedown(" + e + ")");
-				colorSelector.Add(this);
-			}
-			, selectedColor, elementColorID);
+		try{
+			colorSelector.AddElementColorSelector(color, function(e){
+		//consoleLog("ColorSelector.onmousedown(" + e + ")");
+					colorSelector.Add(this);
+				}
+				, selectedColor, elementColorID);
+	    } catch(e) {
+			consoleError("Create Color Selector failed. " + e);
+	    }
 	}
 	
 	, Add: function(elementColorSelector){
@@ -67,6 +71,8 @@
 			elementColor = document.createElement("input");
 			elementParent.appendChild(elementColor);
 		} else elementColor = document.getElementById(elementColorID);
+		if(!elementColor)
+			throw "Invalid id of Color Selector input element: " + elementColorID;
 		elementColor.style.background = color; 
 		elementColor.style.border = "1px solid #000000"; 
 		elementColor.style.padding = "0px 0px"; 
