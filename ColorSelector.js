@@ -28,7 +28,6 @@
 		element.className = "downarrowcolorselector";
 		colorSelector.AddElementColorA(element, elementColorSelector);//.selectedColor);
 		var offsetSum = getOffsetSum(elementColorSelector);
-//		element.style.top = (offsetSum.top - elementColorSelector.offsetHeight - element.offsetHeight) + "px";
 		element.style.top = (offsetSum.top - elementColorSelector.offsetHeight) + "px";
 		
 		//for Internet for Android 5.0 in Samsung Galaxy S5
@@ -122,7 +121,8 @@
 				var color = this.style.backgroundColor;
 				elementColorSelector.style.background = color;
 				colorSelector.InputValue(elementColorSelector, color);
-				elementColorSelector.selectedColor(color);
+				if(elementColorSelector.selectedColor)
+					elementColorSelector.selectedColor(color);
 			}
 		);
 		elementColorTooltip.elementColorSelector = elementColorSelector;
@@ -134,7 +134,6 @@
 		var colorInvert = invertHex(colourNameToHex(color));
 		if(colorInvert == false)
 			return;
-//alert(color);			
 		elementInput.style.color = colorInvert;
 		elementInput.value = color;
 	}
