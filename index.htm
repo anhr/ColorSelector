@@ -30,6 +30,7 @@
 	
 </head>
 <body>
+	<p><a href='../'>Home</a> | <a href='https://github.com/anhr/ColorSelector' target="_blank">GitHub</a></p>
 	<h1>Сross browser compatible Color Selector</h1>
 	You can use my Color Selector instead of &lt;input type="color"&gt; if you want open your web page in an old web browser, that does not supports HTML5,
 	for example IE6.
@@ -40,8 +41,17 @@
 	<hr>
 	My Color Selectors:
 	<p>
-		<input id="colorSelector1">
+		My Color Selector is used only if your browser does not support &lt;input type="color"&gt;.
+		<br />
+<!--		<input type="color" id="colorSelector1" onchange="javascript: onChangeColorSelector1(this)">-->
+		<input type="color" id="colorSelector1">
 		<script>
+/*		
+			function onChangeColorSelector1(input){
+consoleLog("onChangeColorSelector1(input)");
+				input.selectedColor(input.value);
+			}
+*/			
 			colorSelector.Create("black", function(selectedColor){
 					consoleLog("selectedColor = " + selectedColor);
 					var elementSelectedColor = document.getElementById("SelectedColor1")
@@ -56,6 +66,8 @@
 		Selected color: <span id="SelectedColor1"></span>
 	</p>
 	<p>
+		My Color Selector is always used.
+		<br />
 		<input id="colorSelector2">
 		<script>
 			colorSelector.Create("#ffffff", function(selectedColor){

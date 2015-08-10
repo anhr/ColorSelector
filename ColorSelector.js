@@ -1,4 +1,23 @@
-﻿var colorSelector = {
+﻿/**
+ * A Javascript object of the cross-browser Color Selector. You can use my Color Selector instead of <input type="color"> if you want open your web page in an old web browser, that does not supports HTML5, for example IE6.
+ * Author: Andrej Hristoliubov
+ * email: anhr@mail.ru
+ * About me: https://googledrive.com/host/0B5hS0tFSGjBZfkhKS1VobnFDTkJKR0tVamxadmlvTmItQ2pxVWR0WDZPdHZxM2hzS1J3ejQ/AboutMe/
+ * source: https://github.com/anhr/ColorSelector
+ * Licences: GPL, The MIT License (MIT)
+ * Copyright: (c) 2015 Andrej Hristoliubov
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Revision:
+ *  2011-06-29, : 
+ *       + Fixed a bug if selectedColor function is not defined
+ *
+ */
+ 
+var colorSelector = {
 	idcolorSelector: "colorSelector"
 	
 	, getcolorSelector: function(){
@@ -8,7 +27,7 @@
 	, Create: function(color, selectedColor, elementColorID){
 		try{
 			colorSelector.AddElementColorSelector(color, function(e){
-		//consoleLog("ColorSelector.onmousedown(" + e + ")");
+//consoleLog("ColorSelector.onmousedown(" + e + ")");
 					colorSelector.Add(this);
 				}
 				, selectedColor, elementColorID);
@@ -26,7 +45,7 @@
 		document.body.appendChild(element);
 		element.id = this.idcolorSelector;
 		element.className = "downarrowcolorselector";
-		colorSelector.AddElementColorA(element, elementColorSelector);//.selectedColor);
+		colorSelector.AddElementColorA(element, elementColorSelector);
 		var offsetSum = getOffsetSum(elementColorSelector);
 		element.style.top = (offsetSum.top - elementColorSelector.offsetHeight) + "px";
 		
@@ -64,19 +83,51 @@
 		colorSelector.AddElementColorTooltip(elementParent, "purple" , elementColorSelector);
 	}
 		
-	, AddElementColor: function(elementParent, color, onmousedown, elementColorID){
+	, AddElementColor: function(elementParent, color, onmousedown, elementColorID, selectedColor){
 		var elementColor;
 		if(typeof elementColorID == 'undefined'){
 			elementColor = document.createElement("input");
 			elementParent.appendChild(elementColor);
-		} else elementColor = document.getElementById(elementColorID);
+		} else {
+			elementColor = document.getElementById(elementColorID);
+			if(elementColor){
+				if(elementColor.type.toLowerCase() == "color"){
+				
+					//http://www.wufoo.com/html5/types/6-color.html
+					//When supported, the pattern, required, readonly and placeholder attributes are irrelevant and ignored.
+					elementColor.pattern="#[a-f0-9]{6}";
+					elementColor.value="invalidcolor";
+alert("elementColor.validationMessage = " + elementColor.validationMessage);
+					if(elementColor.validationMessage == ""){
+						consoleLog("HTML5 compatible browser. Do not use my Color Selector.");
+						if(selectedColor){
+							elementColor.selectedColor = selectedColor;
+							if(!elementColor.onchange){
+								elementColor.onchange = function(){
+//consoleLog("colorSelector.elementColor.onchange()");
+									if(colourNameToHex(this.value))
+										this.selectedColor(this.value);
+									else alert(isRussian() ?
+										"Некорректное название цвета " + this.value + ". Допускается название цвета на английском языке или число а шестьнадцатеричном формате: #RRGGBB"
+										: "Invalid color name: " + this.value + ". Type correct color name or hexadecimal color value: #RRGGBB"
+									)
+								}
+							}
+						} else consoleError("AddElementColor(...) failed! selectedColor = " + selectedColor)
+						return null;
+					}
+					elementColor.type = "text";
+				}
+			}
+		}
 		if(!elementColor)
 			throw "Invalid id of Color Selector input element: " + elementColorID;
 		elementColor.style.background = color; 
 		elementColor.style.border = "1px solid #000000"; 
 		elementColor.style.padding = "0px 0px"; 
 		elementColor.style.display = "inline-block";
-		elementColor.style.cursor = "default";//for IE
+//		elementColor.style.cursor = "default";//for IE
+		elementColor.style.cursor = "pointer";
 		elementColor.onmousedown = onmousedown;
 		elementColor.onmouseover = function(){
 //consoleLog("colorSelector.elementColor.onmouseover()");
@@ -91,7 +142,9 @@
 	}
 	
 	, AddElementColorSelector: function(color, onmousedown, selectedColor, elementColorID){
-		var elementColorSelector = this.AddElementColor(document.body, color, onmousedown, elementColorID);
+		var elementColorSelector = this.AddElementColor(document.body, color, onmousedown, elementColorID, selectedColor);
+		if(!elementColorSelector)
+			return;
 		if(elementColorSelector.tagName.toUpperCase() != "INPUT"){
 			consoleError("Use input element as Color Selector");
 			return;
@@ -114,8 +167,8 @@
 	
 	, AddElementColorTooltip: function(elementParent, color, elementColorSelector){
 		var elementColorTooltip = this.AddElementColor(elementParent, color, function()
-			{
-		//consoleLog("colorSelector.selectColor(). this.selectedColor = " + this.selectedColor);
+			{//onmousedown event
+//consoleLog("colorSelector.selectColor(). this.selectedColor = " + this.selectedColor);
 				colorSelector.Remove();
 				var elementColorSelector = this.elementColorSelector;
 				var color = this.style.backgroundColor;
