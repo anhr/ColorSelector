@@ -97,9 +97,8 @@ var colorSelector = {
 					//When supported, the pattern, required, readonly and placeholder attributes are irrelevant and ignored.
 					elementColor.pattern="#[a-f0-9]{6}";
 					elementColor.value="invalidcolor";
-alert("elementColor.validationMessage = " + elementColor.validationMessage);
 					if(elementColor.validationMessage == ""){
-						consoleLog("HTML5 compatible browser. Do not use my Color Selector.");
+						consoleLog("Current browser support the color input type. Do not use my Color Selector.");
 						if(selectedColor){
 							elementColor.selectedColor = selectedColor;
 							if(!elementColor.onchange){
