@@ -25,6 +25,8 @@ var colorSelector = {
 	}
 	
 	, Create: function(color, selectedColor, elementColorID){
+		if(!colourNameToHex(color))
+			color = "black";
 		try{
 			colorSelector.AddElementColorSelector(color, function(e){
 //consoleLog("ColorSelector.onmousedown(" + e + ")");
@@ -92,13 +94,20 @@ var colorSelector = {
 			elementColor = document.getElementById(elementColorID);
 			if(elementColor){
 				if(elementColor.type.toLowerCase() == "color"){
-				
+/*
+is not works in Android  2.3.6				
 					//http://www.wufoo.com/html5/types/6-color.html
 					//When supported, the pattern, required, readonly and placeholder attributes are irrelevant and ignored.
-					elementColor.pattern="#[a-f0-9]{6}";
-					elementColor.value="invalidcolor";
+					elementColor.setAttribute("pattern","#[a-f0-9]{6}");
+					elementColor.setAttribute("value", "invalidcolor");
 					if(elementColor.validationMessage == ""){
-						consoleLog("Current browser support the color input type. Do not use my Color Selector.");
+*/					
+					//http://stackoverflow.com/questions/29567299/modinizer-test-if-color-input-type-is-available/29573260#29573260
+					if(elementColor.value === ""){
+						//Your browser doesn't support color input
+					} else {
+						consoleLog("Your browser support color input. Do not use Color Selector.");
+						elementColor.value = colourNameToHex(color); 
 						if(selectedColor){
 							elementColor.selectedColor = selectedColor;
 							if(!elementColor.onchange){
@@ -107,8 +116,8 @@ var colorSelector = {
 									if(colourNameToHex(this.value))
 										this.selectedColor(this.value);
 									else alert(isRussian() ?
-										"Некорректное название цвета " + this.value + ". Допускается название цвета на английском языке или число а шестьнадцатеричном формате: #RRGGBB"
-										: "Invalid color name: " + this.value + ". Type correct color name or hexadecimal color value: #RRGGBB"
+										"Некорректное название цвета " + this.value + ". Допускается название цвета на английском языке или число а шестьнадцатеричном формате: '#rrggbb' где rr, gg, bb две шестьнадцатеричные цифры"
+										: "Invalid color name: " + this.value + ". Type correct color name or '#rrggbb' where rr, gg, bb are two-digit hexadecimal numbers."
 									)
 								}
 							}
