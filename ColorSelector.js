@@ -195,6 +195,7 @@ is not works in Android  2.3.6
 		var colorInvert = invertHex(colourNameToHex(color));
 		if(colorInvert == false)
 			return;
+		elementInput.style.background = color;
 		elementInput.style.color = colorInvert;
 		elementInput.value = color;
 	}

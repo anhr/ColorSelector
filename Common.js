@@ -455,3 +455,30 @@ function getDecimalSeparator() {
 
 	return decSep;
 }
+
+function get_cookie ( cookie_name, defaultValue)
+{
+	//http://ruseller.com/lessons.php?rub=28&id=593
+  var results = document.cookie.match ( '(^|;) ?' + cookie_name + '=([^;]*)(;|$)' );
+ 
+  if ( results )
+    return ( unescape ( results[2] ) );
+  else
+    return defaultValue;
+}
+
+function SetCookie(name, value)
+{
+	//http://ruseller.com/lessons.php?rub=28&id=593
+	var cookie_date = new Date ( );  // Текущая дата и время
+	cookie_date.setTime ( cookie_date.getTime() + 1000 * 60 * 60 * 24 * 365);
+	document.cookie = name + "=" + value + "; expires=" + cookie_date.toGMTString();
+}
+
+function delete_cookie ( cookie_name )
+{
+	//http://ruseller.com/lessons.php?rub=28&id=593
+	var cookie_date = new Date ( );  // Текущая дата и время
+	cookie_date.setTime ( cookie_date.getTime() - 1 );
+	document.cookie = cookie_name += "=; expires=" + cookie_date.toGMTString();
+}
