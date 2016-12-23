@@ -30,6 +30,6 @@ Android 2.3.6.
 IE in Windows Phone.
 
 ## Have a job for me?
-Please read <a href='https://googledrive.com/host/0B5hS0tFSGjBZfkhKS1VobnFDTkJKR0tVamxadmlvTmItQ2pxVWR0WDZPdHZxM2hzS1J3ejQ/AboutMe/' target="_blank">About Me</a>.
+Please read <a href='http://anhr.ucoz.net/AboutMe/' target="_blank">About Me</a>.
 
 
