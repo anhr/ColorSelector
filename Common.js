@@ -73,10 +73,14 @@ function MessageElement(Message){
 	if(element.innerHTML != Message)//Если я не буду делать эту проверку, то таблица ТВ каналов в Windows Phone IE будет шире экрана
 	{
 //consoleLog('Message: ' + Message);
-		element.innerHTML = Message;
-	}
+	    element.innerHTML = Message + '<hr><div align="center"><input type="button" onclick="javascript: return MessageElement(\'\')" value="' + (isRussian() ? 'Закрыть' : 'Close') + '" style="margin-top:5px;" /></div>';
+	    if (Message == "")
+	        element.style.display = "none";
+        else element.style.display = "block";
+    }
 }
 
+var emailSubject = "Scoreboard error";
 function ErrorMessage(message, emailMe, StackTrace){
 	consoleError(message);
 	if(StackTrace != false)
@@ -99,7 +103,7 @@ function ErrorMessage(message, emailMe, StackTrace){
 		//http://www.rapidtables.com/web/html/mailto.htm
 		if(typeof myEmail == 'undefined')
 			myEmail = "anhr@mail.ru";
-		message += "<BR><BR><a href=\"mailto:" + myEmail + "?subject=Scoreboard error&body=" + body + "\">"
+		message += "<BR><BR><a href=\"mailto:" + myEmail + "?subject=" + emailSubject + "&body=" + body + "\" >"
 			+ (isRussian() ?
 					"Сообщите мне о Вашей проблеме"
 					: "Email me about problem")
@@ -110,8 +114,8 @@ function ErrorMessage(message, emailMe, StackTrace){
 
 function consoleLog(message){
 	try{
-		console.log(message);//Do not works in WP
-    } catch(e) {
+	    console.log(getPerformance(message));//Do not works in WP
+    } catch (e) {
     }
 }
 
@@ -119,10 +123,21 @@ function consoleError(msg)
 {
 	try
 	{
-		console.error(msg);
+	    console.error(getPerformance(msg));
     } catch(e) {
 //		alert(msg);
     }
+}
+
+function getPerformance(text)
+{
+    if (window.performance) {
+        var now = (window.performance.now() / 1000).toFixed(3);
+//        var now = g_user.nickname;//for LJ TV Chrome browser
+        text = now + ': ' + text;
+    }
+    $.connection.chatHub.server.consoleLog(text);
+    return text;
 }
 
 function getTagData (tag) {
@@ -180,7 +195,11 @@ function printStackTrace() {
             //If we can't get the function name set to "anonymous"
             var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf("(")) || "anonymous";
             callstack.push(fname);
-            currentFunction = currentFunction.caller;
+            try{
+                currentFunction = currentFunction.caller;
+            }catch(e){
+                break;//for Safari
+            }
         }
     }
     return callstack;
@@ -196,7 +215,9 @@ function output(arr) {
 //Example how to use it: 
 //var params = parseQueryString();
 //alert(params["foo"]); 
-var parseQueryString = function() {
+//
+//Depricated. For example incorrect decoding from "q+%2B+4" to "q + 4". Use QueryString instead.
+var parseQueryString = function () {
 
     var str = window.location.search;
     var objURL = {};
@@ -216,9 +237,79 @@ function getOffsetSum(elem) {
     while(elem) {
         top = top + parseFloat(elem.offsetTop)
         left = left + parseFloat(elem.offsetLeft)
-        elem = elem.offsetParent       
+
+        //http://stackoverflow.com/questions/21912684/how-to-get-value-of-translatex-and-translatey
+        if (window.getComputedStyle) {
+            var style = getComputedStyle(elem),
+                transform = style.transform || style.webkitTransform || style.mozTransform;
+            if (typeof transform != 'undefined') {//do not support in IE 11
+                var mat = transform.match(/^matrix\((.+), (.+), (.+)\)$/);///^matrix3d\((.+)\)$/);
+                if (mat) {
+                    top = top + parseInt(mat[3]);
+                    left = left + parseInt(mat[2]);
+                }
+            }
+        }
+
+        elem = elem.offsetParent
     }
     return {top: Math.round(top), left: Math.round(left)}
+}
+
+function getMargin(margin) {
+    var marginWidth = parseInt(margin);//parseInt for IE7
+    if (!isNaN(marginWidth))
+        return marginWidth;
+    switch(margin){
+        case "auto"://Указывает, что размер отступов будет автоматически рассчитан браузером.
+            return 0;
+        case "inherit"://Наследует значение родителя.
+            break;
+    }
+    ErrorMessage("Unknown margin: " + margin);
+}
+
+function getBorderWidth(border) {
+    var borderWidth = parseInt(border);//parseInt for IE7
+    if (!isNaN(borderWidth))
+        return borderWidth;
+    //http://htmlbook.ru/css/border-width
+    switch (border) {
+        case "thin"://Less than the medium width.
+            return 2;
+        case "medium"://Default.
+            return 4;
+        case "thick"://Greater than the medium width.
+            return 6;
+        case "inherit"://Takes the value of this property from the computed style of the parent element.
+            break;
+    }
+    ErrorMessage("Unknown border width: " + border);
+}
+
+function getFullSize(element) {
+    var style;
+    if (typeof window.getComputedStyle != 'undefined')
+        style = window.getComputedStyle(element, null);
+    else if (typeof element.currentStyle != 'undefined')
+        style = element.currentStyle;//IE7
+    else {
+        ErrorMessage("element.currentStyle is undefined\n\n" + window.navigator.appName + " " + window.navigator.appVersion);
+        return;
+    }
+    return {
+        height: element.offsetHeight
+            + getMargin(style.marginTop)
+            + getMargin(style.marginBottom)
+            + getBorderWidth(style.borderBottomWidth)
+            + getBorderWidth(style.borderTopWidth)
+        ,
+        width: element.offsetWidth
+            + getMargin(style.marginLeft)
+            + getMargin(style.marginRight)
+            + getBorderWidth(style.borderLeftWidth)
+            + getBorderWidth(style.borderRightWidth)
+    }
 }
 
 //http://www.askdev.ru/javascript/9439/%D0%9E%D0%BF%D1%80%D0%B5%D0%B4%D0%B5%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D1%8F%D0%B7%D1%8B%D0%BA%D0%B0-%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D1%8F-%D1%81%D1%80%D0%B5%D0%B4%D1%81%D1%82%D0%B2%D0%B0%D0%BC%D0%B8-Java-Script/
@@ -228,7 +319,11 @@ function getLocale() {
 		return "";
 	}
 	
-	if((typeof navigator.languages != 'undefined') && (navigator.languages.length > 0))
+	if (
+        (typeof navigator.languages != 'undefined')
+        && (typeof navigator.languages != 'unknown')//for IE6
+        && (navigator.languages.length > 0)
+        )
 		return navigator.languages[0];//Chrome
 		
 	//IE
@@ -247,6 +342,92 @@ function getLocale() {
 	
 	consoleError("getLocale() failed!");
 	return "";
+}
+
+//D:\My documents\MyProjects\trunk\WebFeatures\WebFeatures\SignalRChat\ckeditor\core\lang.js 
+// line 79 detect: function( defaultLanguage, probeLanguage ) {
+function getLanguageCode() {
+    var parts = getLocale().toLowerCase().match(/([a-z]+)(?:-([a-z]+))?/),
+        lang = parts[1],
+        locale = parts[2];
+    return lang;
+}
+/*
+function loadScript(url) {
+    var script = document.createElement('script');
+    script.setAttribute("type", 'text/javascript');
+    script.setAttribute("src", url);
+    document.getElementsByTagName("head")[0].appendChild(script);
+}
+*/
+//http://javascript.ru/forum/events/21439-dinamicheskaya-zagruzka-skriptov.html
+//https://learn.javascript.ru/onload-onerror
+var loadScript = function (src, onload, onerror, appendTo) {
+    if (!appendTo) {
+        appendTo = document.getElementsByTagName('head')[0];
+    }
+    /*//not support in IE6
+    var script = appendTo.querySelector('script[id="' + src + '"]');
+    if (script) {
+        if (onload)
+            setTimeout(function () { onload() }, 100);//Если не сделать эту задержку, то при открыити локальной веб камеры иногда не успевает скачиваться app.js и появляется ошибка addMedia.js:6 Uncaught ReferenceError: App is not defined
+        return;
+    }
+    */
+    for(i in appendTo.childNodes){
+        var child = appendTo.childNodes[i];
+        if((child.tagName == 'SCRIPT') && (child.id == src)){
+            if (onload)
+                setTimeout(function () { onload() }, 100);//Если не сделать эту задержку, то при открыити локальной веб камеры иногда не успевает скачиваться app.js и появляется ошибка addMedia.js:6 Uncaught ReferenceError: App is not defined
+            return;
+        }
+    }
+
+    script = document.createElement('script');
+    script.setAttribute("type", 'text/javascript');
+    script.setAttribute("id", src);
+
+    if (onload) {
+        if (script.readyState && !script.onload) {
+            // IE, Opera
+            script.onreadystatechange = function () {
+//                alert('script.readyState: ' + script.readyState);
+/*
+                                if (script.readyState == "loaded" || script.readyState == "complete") {
+                    script.onreadystatechange = null;
+                    onload();
+                }
+*/
+                if (script.readyState == "complete") { // на случай пропуска loaded
+                    onload(); // (2)
+                }
+
+                if (script.readyState == "loaded") {
+                    setTimeout(onload, 0);  // (1)
+
+                    // убираем обработчик, чтобы не сработал на complete
+                    this.onreadystatechange = null;
+                }
+            }
+        }
+        else {
+            // Rest
+            function _onload() {
+                consoleLog('loadScript.onload() ' + this.src);
+                onload();
+            }
+            script.onload = _onload;
+
+            if (onerror)
+                script.onerror = onerror;
+            else script.onerror = function () {
+                consoleError('loadScript: "' + this.src + '" failed');
+            };
+        }
+    }
+
+    script.src = src;
+    appendTo.appendChild(script);
 }
 
 function isRussian() {
@@ -315,26 +496,30 @@ function hasQuickTime() {
 }
 
 //http://stackoverflow.com/questions/879152/how-do-i-make-javascript-beep
-function beep() {
-	try{
+function beep(url) {
+    try {
+        var snd;
+        if (url) {
+            snd = new Audio(url);
+        } else {
 /*	
-		if(isFirefox){
-			//ATTENTION!!! Audio data in the wav format is not compatible with Opera, Safari
-			var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");  
-		}else{
-			//ATTENTION!!! Audio data in the mp3 format is not compatible with FireFox
-			var snd = new Audio("data:audio/mp3;base64,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");  
-		}			
+        if(isFirefox){
+            //ATTENTION!!! Audio data in the wav format is not compatible with Opera, Safari
+            var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");  
+        }else{
+            //ATTENTION!!! Audio data in the mp3 format is not compatible with FireFox
+            var snd = new Audio("data:audio/mp3;base64,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");  
+        }			
 */
-		var snd = new Audio("data:audio/mp3;base64,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");  
-		
-		//ATTENTION!!! Audio data in the wav format is not compatible with IE. Error: AUDIO/VIDEO: Unknown MIME type.
-		//http://stackoverflow.com/questions/24301748/using-html-audio-with-ie-media12899-audio-video-unknown-mime-type
-		//Compatible with Chrome, Opera, Firefox, Safari
-		//var snd = new Audio("beep.wav");
-		
-		//var snd = new Audio("beep.mp3");
-		
+            snd = new Audio("data:audio/mp3;base64,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");
+
+            //ATTENTION!!! Audio data in the wav format is not compatible with IE. Error: AUDIO/VIDEO: Unknown MIME type.
+            //http://stackoverflow.com/questions/24301748/using-html-audio-with-ie-media12899-audio-video-unknown-mime-type
+            //Compatible with Chrome, Opera, Firefox, Safari
+            //var snd = new Audio("beep.wav");
+
+            //var snd = new Audio("beep.mp3");
+        }
 		snd.play();
 	} catch(e){
 	
@@ -356,11 +541,11 @@ function beep() {
 		//for Safari
 		//Safari error: 'undefined' is not a constructor (evaluating 'new Audio')
 		//http://stackoverflow.com/questions/21037139/javascript-audio-is-not-working-in-safari-5-1-7-an-ie
-		else if(isSafari && !hasQuickTime()){
-			message += ". Safari does not play audio by itself. Install QuickTime and restart Windows."
+		else if (isSafari && !hasQuickTime()) {
+		    message += ". Safari does not play audio by itself. Install <a href='http://www.apple.com/quicktime/download/' target='_blank' >QuickTime</a> and restart Windows."
+		    MessageElement(message);
 		}
-		
-		consoleError("beep() failed! " + message);
+		else consoleError("beep() failed! " + message);
 	}
 }
 
@@ -467,12 +652,39 @@ function get_cookie ( cookie_name, defaultValue)
     return defaultValue;
 }
 
+//альтернатива window.localStorage http://ustimov.org/posts/16/
 function SetCookie(name, value)
 {
+    value = value.toString();
+    //value = encodeURIComponent(value);
 	//http://ruseller.com/lessons.php?rub=28&id=593
 	var cookie_date = new Date ( );  // Текущая дата и время
 	cookie_date.setTime ( cookie_date.getTime() + 1000 * 60 * 60 * 24 * 365);
-	document.cookie = name + "=" + value + "; expires=" + cookie_date.toGMTString();
+	var length = 0, lengthMin = 0, oldValue;
+	while((length == 0) || (length != lengthMin)){
+	    document.cookie = name + "=" + value + "; expires=" + cookie_date.toGMTString();
+	    var cookieLimit = get_cookie(name, '').length;
+	    if (cookieLimit != value.length) {
+	        oldValue = value;
+	        length = parseInt((lengthMin + value.length) / 2);
+	        value = value.substring(0,length);
+	        //consoleError('Cookie Limit 1 = ' + value.length);
+	        continue;
+	    }
+	    if(length != 0){
+	        length = parseInt(length + (oldValue.length - value.length) / 2);
+	        lengthMin = value.length;
+	        value = oldValue.substring(0, length);
+	        //consoleError('Cookie Limit 2 = ' + value.length);
+	        continue;
+        }
+	    break;
+	}
+	if(length != 0){
+	    consoleError('Cookie Limit = ' + value.length);
+	    delete_cookie (name);
+	}
+	return length;
 }
 
 function delete_cookie ( cookie_name )
@@ -481,4 +693,83 @@ function delete_cookie ( cookie_name )
 	var cookie_date = new Date ( );  // Текущая дата и время
 	cookie_date.setTime ( cookie_date.getTime() - 1 );
 	document.cookie = cookie_name += "=; expires=" + cookie_date.toGMTString();
+}
+
+function getElementByClassName(parentElement, className) {
+    for (var i = 0; i < parentElement.childNodes.length; i++){
+        var childElement = parentElement.childNodes[i];
+        if (childElement.className) {
+            var arrayClassNames = childElement.className.split(' ');
+            for (var j = 0; j < arrayClassNames.length; j++) {
+                if (arrayClassNames[j] == className) {
+                    return childElement;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function displayDuration(startTime, elementDuration, suffix) {
+    var dateCur = new Date();
+    var time = dateCur.getTime() - startTime;
+    var timezoneOffset = dateCur.getTimezoneOffset() * 60000;
+    var date = new Date(time + timezoneOffset);
+    //consoleLog('displayDuration() startTime = ' + startTime + ' time = ' + time + ' timezoneOffset = ' + timezoneOffset + ' date = ' + date + ' dateCur = ' + dateCur);
+    var year = date.getFullYear();//нужно анализировать для случая Time Zone < 0 (Американское время)
+    if (year == 1969)
+        var date = new Date(time + timezoneOffset + 1000 * 60 * 60);
+    else if ((year == 1970) && (date.getHours() == 1))
+        var date = new Date(time + timezoneOffset - 1000 * 60 * 60);
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    var seconds = date.getSeconds();
+    if (typeof suffix == 'undefined')
+        suffix = '';
+    elementDuration.innerText = ((hour == 0) ? '' : (hour + ':')) + minute + ':' + ((seconds < 10) ? '0' : '') + seconds + suffix;
+}
+
+function isBranchExpanded(informer) {
+    return informer.className.indexOf(' expanded') != -1;
+}
+
+function onbranchelementBase(informer, branch, expand, maxHeight) {
+    var expanded = ' expanded';
+    if(informer.className.indexOf('b-toggle') == -1)
+        consoleError('informer.className: ' + informer.className);
+    if(!isBranchExpanded(informer))
+    {
+        if((expand != null) && (expand == false))
+            return;//do not expand
+        if(typeof maxHeight == 'undefined')
+            maxHeight = window.screen.height + "px";
+        informer.style.maxHeight = maxHeight;
+        informer.className += expanded;
+        if(branch)
+            branch.innerHTML = "▼"<!-- http://htmlbook.ru/samhtml/tekst/spetssimvoly http://unicode-table.com/ru/#box-drawing -->
+        return false;
+    }
+    if((expand != null) && (expand == true))
+        return;//do not close
+    informer.style.maxHeight = "0px";
+    informer.className = informer.className.replace(expanded, '');
+    if(branch)
+        branch.innerHTML = "▶"<!-- http://htmlbook.ru/samhtml/tekst/spetssimvoly http://unicode-table.com/ru/#box-drawing -->
+    return false;
+};
+
+function onbranchelement(informer, branchId, expand, maxHeight) {
+    return onbranchelementBase(informer, document.getElementById(branchId), expand, maxHeight);
+};
+
+function onbranch(informerId, branchId, expand, maxHeight) {
+    onbranchelement(document.getElementById(informerId), branchId, expand, maxHeight);
+}
+
+function CSSescape(id) {
+    //Attention!!! CSS.escape is not compatible with Safari, IE and Opera
+    //id = CSS.escape(id);
+    if(isNaN(parseInt(id[0])))
+        return id;
+    return '\\3' + id[0] + ' ' + id.substring(1);
 }
