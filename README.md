@@ -1,6 +1,6 @@
 You can use my Color Selector instead of &lt;input type="color"&gt; if you want open your web page in an old web browser, that does not supports HTML5, for example IE6.
 
-Example: <a href='http://anhr.ucoz.net/ColorSelector/' target="_blank">Color 
+Example: <a href='https://anhr.github.io/ColorSelector/' target="_blank">Color 
 Selector</a>.
 
 ## On the following browsers have been successfully tested:
